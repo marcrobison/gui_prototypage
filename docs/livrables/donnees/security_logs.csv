@@ -1,0 +1,6 @@
+id,timestamp,event_type,details,severity
+1,2026-11-17 13:51:59,SYSTEM_STARTED,Security station booted (disarmed),INFO
+2,2026-11-17 13:52:58,AUTH_FAILED,Failed arm attempt via Desktop,MEDIUM
+3,2026-11-17 13:52:58,SYSTEM_ARMED,via Desktop,INFO
+4,2026-11-17 13:53:09,ULTRASONIC_DISTANCE,18 cm < 30 cm,MEDIUM
+5,2026-11-17 13:53:09,PIR_MOTION_ALERT,Zone A,HIGH
