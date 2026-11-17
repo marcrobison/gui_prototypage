@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08131d">
+  <title>Security Station</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="frame">
+    <main class="dashboard" id="dashboard">
+
+      <!-- System status -->
+      <section class="tile tile-status" data-tile="status" tabindex="0" aria-label="System status, expand">
+        <button class="expand" type="button" aria-label="Expand system status">⤢</button>
+        <div class="clock" data-bind="clock">--:--:--</div>
+        <div class="status-block">
+          <div class="status-label">SYSTEM <br>STATUS:</div>
+          <div class="status-word" data-bind="armed-word">—</div>
+        </div>
+        <div class="badge" data-bind="badge">
+          <svg class="shield" viewBox="0 0 32 32" aria-hidden="true">
+            <path class="shield-body" d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z"/>
+            <path class="shield-mark" d="m10 16 4 4 8-9"/>
+          </svg>
+          <span data-bind="status">—</span>
+        </div>
+      </section>
+
+      <div class="middle">
+        <div class="row row-top">
+          <!-- PIR -->
+          <section class="tile tile-pir" data-tile="pir" tabindex="0" aria-label="PIR motion detector, expand">
+            <button class="expand" type="button" aria-label="Expand PIR motion detector">⤢</button>
+            <h2>PIR Motion Detector</h2>
+            <div class="pir-state" data-bind="pir-state"><span class="dot"></span><span data-bind="pir-word">CLEAR</span></div>
+            <div class="pir-detail" data-bind="pir-detail">PIR State: <b>Passive</b><br>(No Motion Detected)</div>
+            <svg class="pir-icon" viewBox="0 0 48 40" aria-hidden="true">
+              <circle cx="24" cy="8" r="4"/>
+              <path d="M24 13v11m0 0-6 11m6-11 6 11M17 18l7-3 7 3"/>
+              <path class="wave" d="M12 10a14 14 0 0 0 0 16M7 6a20 20 0 0 0 0 24M36 10a14 14 0 0 1 0 16M41 6a20 20 0 0 1 0 24"/>
+            </svg>
+          </section>
+
+          <!-- Ultrasonic -->
+          <section class="tile tile-ultra" data-tile="ultrasonic" tabindex="0" aria-label="Ultrasonic distance, expand">
+            <button class="expand" type="button" aria-label="Expand ultrasonic distance">⤢</button>
+            <div class="tile-head">
+              <h2>ULTRASONIC DISTANCE</h2>
+              <span class="big-reading" data-bind="distance">-- cm</span>
+            </div>
+            <canvas class="chart" data-chart="distance"></canvas>
+          </section>
+        </div>
+
+        <div class="row row-bottom">
+          <!-- DHT -->
+          <section class="tile tile-env" data-tile="environment" tabindex="0" aria-label="Ambient environment, expand">
+            <button class="expand" type="button" aria-label="Expand ambient environment">⤢</button>
+            <h2>Ambient Environment (DHT)</h2>
+            <div class="gauges">
+              <canvas class="gauge" data-gauge="temperature"></canvas>
+              <canvas class="gauge" data-gauge="humidity"></canvas>
+            </div>
+          </section>
+
+          <!-- Manual controls -->
+          <section class="tile tile-manual" data-tile="manual" tabindex="0" aria-label="Manual controls, expand">
+            <button class="expand" type="button" aria-label="Expand manual controls">⤢</button>
+            <h2>Manual Controls</h2>
+            <div class="controls">
+              <button class="ctl" type="button" data-action="relay" data-bind="relay-btn">[RELAY: OFF]</button>
+              <button class="ctl" type="button" data-action="buzzer" data-bind="buzzer-btn">[BUZZER TEST]</button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Authentication -->
+      <section class="tile tile-auth" data-tile="auth" tabindex="0" aria-label="User authentication, expand">
+        <button class="expand" type="button" aria-label="Expand user authentication">⤢</button>
+        <h2>USER AUTHENTICATION</h2>
+        <form class="auth-form" autocomplete="off">
+          <label>Enter Password:
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button class="primary" type="submit" data-bind="arm-btn">ARM SYSTEM</button>
+          <p class="msg" role="status" aria-live="polite"></p>
+        </form>
+        <p class="warn" data-bind="default-pw" hidden>⚠ Default password in use: run <code>make set-password</code></p>
+      </section>
+
+      <!-- Logs -->
+      <section class="tile tile-logs" data-tile="logs" tabindex="0" aria-label="Security logs, expand">
+        <button class="expand" type="button" aria-label="Expand security logs">⤢</button>
+        <div class="logs-head">
+          <h2>RECENT SECURITY LOGS <span class="muted">(SQLite)</span></h2>
+          <div class="logs-actions">
+            <button class="ctl" type="button" data-logs="refresh">[ Refresh Logs ]</button>
+            <a class="ctl" href="/api/logs.csv" download="security_logs.csv">[ Export CSV ]</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="logs">
+            <thead><tr><th>Timestamp</th><th>Event Type</th><th>Details</th><th class="sev-col">Total Events: <span data-bind="log-total">0</span></th></tr></thead>
+            <tbody data-bind="log-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Expanded view -->
+    <section class="expanded" id="expanded" hidden aria-modal="true" role="dialog">
+      <header class="expanded-head">
+        <button class="back" type="button" id="back">← Back</button>
+        <h1 id="expanded-title"></h1>
+      </header>
+      <div class="expanded-body" id="expanded-body"></div>
+    </section>
+
+    <footer class="footer">
+      <span>RASPBERRY PI SECURITY STATION</span>
+      <span class="conn" id="conn" data-state="connecting">connecting…</span>
+    </footer>
+  </div>
+
+  <!-- Password prompt for manual controls -->
+  <dialog id="pw-dialog">
+    <form method="dialog" id="pw-form">
+      <h3 id="pw-title">Password required</h3>
+      <input type="password" name="password" autocomplete="current-password" required placeholder="Station password">
+      <p class="msg" id="pw-msg" role="status"></p>
+      <div class="dialog-actions">
+        <button type="button" class="ctl" id="pw-cancel">Cancel</button>
+        <button type="submit" class="primary">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Expanded view templates -->
+  <template id="tpl-status">
+    <div class="detail detail-status">
+      <div class="clock xl" data-bind="clock"></div>
+      <div class="status-word xl" data-bind="armed-word"></div>
+      <div class="badge xl" data-bind="badge">
+        <svg class="shield" viewBox="0 0 32 32" aria-hidden="true"><path class="shield-body" d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z"/><path class="shield-mark" d="m10 16 4 4 8-9"/></svg>
+        <span data-bind="status"></span>
+      </div>
+      <dl class="facts">
+        <div><dt>Uptime</dt><dd data-bind="uptime"></dd></div>
+        <div><dt>Distance</dt><dd data-bind="distance"></dd></div>
+        <div><dt>Motion</dt><dd data-bind="pir-word"></dd></div>
+        <div><dt>Temperature</dt><dd data-bind="temperature"></dd></div>
+        <div><dt>Humidity</dt><dd data-bind="humidity"></dd></div>
+        <div><dt>Relay</dt><dd data-bind="relay"></dd></div>
+        <div><dt>Buzzer</dt><dd data-bind="buzzer"></dd></div>
+        <div><dt>Logged events</dt><dd data-bind="log-total"></dd></div>
+      </dl>
+    </div>
+  </template>
+
+  <template id="tpl-pir">
+    <div class="detail detail-pir">
+      <div class="detail-top">
+        <div class="pir-state xl" data-bind="pir-state"><span class="dot"></span><span data-bind="pir-word"></span></div>
+        <div class="pir-detail" data-bind="pir-detail"></div>
+        <dl class="facts" data-bind="zone-counts"></dl>
+      </div>
+      <h3>Recent detections</h3>
+      <div class="table-wrap">
+        <table class="logs"><thead><tr><th>Time</th><th>Zone</th><th>Duration</th><th>While</th></tr></thead>
+          <tbody data-bind="detections"></tbody></table>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-ultrasonic">
+    <div class="detail detail-ultra">
+      <dl class="facts">
+        <div><dt>Current</dt><dd class="accent" data-bind="distance"></dd></div>
+        <div><dt>Min (60 s)</dt><dd data-bind="d-min"></dd></div>
+        <div><dt>Avg (60 s)</dt><dd data-bind="d-avg"></dd></div>
+        <div><dt>Max (60 s)</dt><dd data-bind="d-max"></dd></div>
+        <div><dt>Threshold</dt><dd data-bind="d-threshold"></dd></div>
+        <div><dt>Crossings (session)</dt><dd data-bind="d-breaches"></dd></div>
+      </dl>
+      <canvas class="chart big" data-chart="distance"></canvas>
+    </div>
+  </template>
+
+  <template id="tpl-environment">
+    <div class="detail detail-env">
+      <div class="gauges big">
+        <canvas class="gauge" data-gauge="temperature"></canvas>
+        <canvas class="gauge" data-gauge="humidity"></canvas>
+      </div>
+      <h3>Temperature (last 10 min)</h3>
+      <canvas class="chart" data-chart="temperature"></canvas>
+      <h3>Humidity (last 10 min)</h3>
+      <canvas class="chart" data-chart="humidity"></canvas>
+    </div>
+  </template>
+
+  <template id="tpl-manual">
+    <div class="detail detail-manual">
+      <div class="controls big">
+        <button class="ctl" type="button" data-action="relay" data-bind="relay-btn"></button>
+        <button class="ctl" type="button" data-action="buzzer" data-bind="buzzer-btn"></button>
+      </div>
+      <dl class="facts">
+        <div><dt>Relay output</dt><dd data-bind="relay"></dd></div>
+        <div><dt>Buzzer</dt><dd data-bind="buzzer"></dd></div>
+      </dl>
+      <p class="muted">Every control requires the station password. Actions are recorded in the security log.</p>
+    </div>
+  </template>
+
+  <template id="tpl-auth">
+    <div class="detail detail-auth">
+      <div class="status-word xl" data-bind="armed-word"></div>
+      <form class="auth-form" autocomplete="off">
+        <label>Enter Password:
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary" type="submit" data-bind="arm-btn"></button>
+        <p class="msg" role="status" aria-live="polite"></p>
+      </form>
+      <p class="warn" data-bind="default-pw" hidden>⚠ Default password in use: run <code>make set-password</code> on the station.</p>
+    </div>
+  </template>
+
+  <template id="tpl-logs">
+    <div class="detail detail-logs">
+      <div class="logs-head">
+        <label class="filter">Severity
+          <select id="sev-filter">
+            <option value="">All</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="INFO">INFO</option>
+          </select>
+        </label>
+        <div class="logs-actions">
+          <button class="ctl" type="button" data-logs="refresh">[ Refresh Logs ]</button>
+          <a class="ctl" href="/api/logs.csv" download="security_logs.csv">[ Export CSV ]</a>
+        </div>
+      </div>
+      <div class="table-wrap tall">
+        <table class="logs">
+          <thead><tr><th>Timestamp</th><th>Event Type</th><th>Details</th><th class="sev-col">Total Events: <span data-bind="log-total"></span></th></tr></thead>
+          <tbody data-bind="log-rows-full"></tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
